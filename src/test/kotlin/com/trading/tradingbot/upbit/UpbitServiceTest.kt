@@ -5,6 +5,8 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.jupiter.api.*
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
+import org.springframework.web.reactive.function.client.WebClientResponseException
+import org.junit.jupiter.api.Assertions.assertThrows
 
 @RestClientTest(ConfigService::class, UpbitService::class)
 class UpbitServiceTest () {
@@ -41,5 +43,15 @@ class UpbitServiceTest () {
                     assertThat(orderbook, hasProperty("total_bid_size"))
                     assertThat(orderbook, hasProperty("orderbook_units"))
                 }}
+    }
+
+    @DisplayName("getOrderBook")
+    @Test
+    fun getOrderbookFailureCase() {
+        val exception = assertThrows(WebClientResponseException.NotFound::class.java) {
+            upbitService.getOrderBook(markets = listOf("KRW-BTCD", "KRW-ETH"))
+        }
+
+        assert(exception.statusCode.is4xxClientError)
     }
 }
