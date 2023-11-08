@@ -1,1 +1,7 @@
-UPBIT_BASE_URL: ${UPBIT_BASE_URL}
+upbit:
+  UPBIT_BASE_URL: ${UPBIT_BASE_URL}
+
+spring:
+  profiles:
+    active: local
+
