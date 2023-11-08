@@ -8,6 +8,9 @@ import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.junit.jupiter.api.Assertions.assertThrows
 
+/**
+ * TODO: 비효율적인 hasProperty 검사 최적화 필요
+ */
 @RestClientTest(ConfigService::class, UpbitService::class)
 class UpbitServiceTest () {
     private lateinit var configService: ConfigService
@@ -50,6 +53,33 @@ class UpbitServiceTest () {
     fun getOrderbookFailureCase() {
         val exception = assertThrows(WebClientResponseException.NotFound::class.java) {
             upbitService.getOrderBook(markets = listOf("KRW-BTCD", "KRW-ETH"))
+        }
+
+        assert(exception.statusCode.is4xxClientError)
+    }
+
+    @DisplayName("getTickers")
+    @Test
+    fun getTickers() {
+        upbitService.getTickers(markets = listOf("KRW-BTC", "KRW-ETH"))
+            ?.apply {
+                for (ticker in this) {
+                    assertThat(ticker, hasProperty("market"))
+                    assertThat(ticker, hasProperty("trade_date"))
+                    assertThat(ticker, hasProperty("trade_time"))
+                    assertThat(ticker, hasProperty("opening_price"))
+                    assertThat(ticker, hasProperty("high_price"))
+                    assertThat(ticker, hasProperty("low_price"))
+                    assertThat(ticker, hasProperty("trade_price"))
+                    assertThat(ticker, hasProperty("prev_closing_price"))
+                }}
+    }
+
+    @DisplayName("getTickers")
+    @Test
+    fun getTickersFailureCase() {
+        val exception = assertThrows(WebClientResponseException.NotFound::class.java) {
+            upbitService.getTickers(markets = listOf("KRW-BTCD", "KRW-ETH"))
         }
 
         assert(exception.statusCode.is4xxClientError)
