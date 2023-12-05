@@ -1,9 +1,11 @@
 package com.trading.tradingbot.upbit
 
 import com.trading.tradingbot.common.ConfigService
+import com.trading.tradingbot.upbit.application.command.GetMarketsCommand
 import com.trading.tradingbot.upbit.dto.GetMarketsDto
 import com.trading.tradingbot.upbit.dto.GetOrderbookByMarketsDto
 import com.trading.tradingbot.upbit.dto.GetTickerByMarketsDto
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
@@ -17,10 +19,11 @@ import org.springframework.web.util.UriComponentsBuilder
 * TODO: 에러 처리 추가 필요
 * */
 @Service
-class UpbitService (private val configService: ConfigService) {
-    private val upbitBaseUrl = this.configService.getUpbitBaseUrl()
-
-    fun getMarkets(): Array<GetMarketsDto>? {
+class UpbitService(
+    @Value("\${upbit.UPBIT_BASE_URL}")
+    private val upbitBaseUrl: String
+) {
+    fun getMarkets(): List<GetMarketsCommand>? {
         val uriBuilder = UriComponentsBuilder.fromPath("/v1/market/all")
 
         val webClient = WebClient.builder().baseUrl(upbitBaseUrl)
@@ -29,7 +32,7 @@ class UpbitService (private val configService: ConfigService) {
 
         val response = webClient.get().uri(uriBuilder.build().toUriString())
             .retrieve()
-            .bodyToMono<Array<GetMarketsDto>>().timeout(Duration.ofSeconds(100))
+            .bodyToMono<List<GetMarketsCommand>>().timeout(Duration.ofSeconds(100))
 
         return response.block()
     }

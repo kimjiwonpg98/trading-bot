@@ -1,25 +1,22 @@
 package com.trading.tradingbot.upbit
 
-import com.trading.tradingbot.common.ConfigService
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
 import org.springframework.web.reactive.function.client.WebClientResponseException
-import org.junit.jupiter.api.Assertions.assertThrows
 
 /**
  * TODO: 비효율적인 hasProperty 검사 최적화 필요
  */
-@RestClientTest(ConfigService::class, UpbitService::class)
+@RestClientTest(UpbitService::class)
 class UpbitServiceTest () {
-    private lateinit var configService: ConfigService
     private lateinit var upbitService: UpbitService
 
     @BeforeEach
     fun setup() {
-        configService = ConfigService("https://api.upbit.com")
-        upbitService = UpbitService(configService)
+        upbitService = UpbitService("https://api.upbit.com")
     }
 
     @DisplayName("getMarkets")

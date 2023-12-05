@@ -1,5 +1,5 @@
 upbit:
-  UPBIT_BASE_URL: ${UPBIT_BASE_URL}
+  UPBIT_BASE_URL: ${UPBIT_BASE_URL:https://api.upbit.com}
 
 spring:
   profiles:
