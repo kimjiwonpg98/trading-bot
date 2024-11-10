@@ -11,6 +11,7 @@ class KorbitWebSocketProperties(
     private val apiKey: String,
     private val apiSecret: String,
     private val wsUrl: String,
+    private val enabled: Boolean,
 ) {
     fun getKorbitConfig(): WebSocketSecretValues =
         WebSocketSecretValues(
@@ -18,6 +19,8 @@ class KorbitWebSocketProperties(
             apiSecret = apiSecret,
             wsUrl = wsUrl,
         )
+
+    fun isEnabled(): Boolean = enabled
 
     fun createHmacSignature(query: String): String {
         val secretKeySpec = SecretKeySpec(this.apiSecret.toByteArray(), "HmacSHA256")

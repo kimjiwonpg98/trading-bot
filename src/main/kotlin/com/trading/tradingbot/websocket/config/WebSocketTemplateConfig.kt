@@ -23,7 +23,9 @@ class WebSocketTemplateConfig(
     private val korbitWebSocketHandler: KorbitWebSocketHandler,
 ) {
     @Bean(name = [UPBIT_WEBSOCKET_CONFIG])
-    fun upbitWebSocketConnectionManager(): WebSocketConnectionManager {
+    fun upbitWebSocketConnectionManager(): WebSocketConnectionManager? {
+        if (!upbitWebSocketProperties.isEnabled()) return null
+
         val token =
             webSocketUtils.generateJwtToken(
                 upbitWebSocketProperties.getUpbitConfig().apiKey,
@@ -43,7 +45,9 @@ class WebSocketTemplateConfig(
     }
 
     @Bean(name = [KORBIT_WEBSOCKET_CONFIG])
-    fun korbitWebSocketConnectionManager(): WebSocketConnectionManager {
+    fun korbitWebSocketConnectionManager(): WebSocketConnectionManager? {
+        if (!korbitWebSocketProperties.isEnabled()) return null
+
         val timestamp = System.currentTimeMillis()
         val params = "timestamp=$timestamp"
         val signature = korbitWebSocketProperties.createHmacSignature(params)

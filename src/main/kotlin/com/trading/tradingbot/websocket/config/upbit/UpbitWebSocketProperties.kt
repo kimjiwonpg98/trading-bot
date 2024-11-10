@@ -9,6 +9,7 @@ data class UpbitWebSocketProperties(
     private val apiKey: String,
     private val apiSecret: String,
     private val wsUrl: String,
+    private val enabled: Boolean,
 ) {
     fun getUpbitConfig(): WebSocketSecretValues =
         WebSocketSecretValues(
@@ -16,6 +17,8 @@ data class UpbitWebSocketProperties(
             apiSecret = apiSecret,
             wsUrl = wsUrl,
         )
+
+    fun isEnabled(): Boolean = enabled
 
     companion object {
         const val UPBIT_WEBSOCKET_CONFIG = "spring.websocket.upbit"

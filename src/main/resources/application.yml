@@ -9,13 +9,17 @@ spring:
       api-key: ${UPBIT_API_KEY:apiKey}
       api-secret: ${UPBIT_API_SECRET:apiSecret}
       ws-url: ${UPBIT_WS_URL:wss:ws}
+      enabled: ${UPBIT_WS_ENABLED:true}
     bithumb:
       apiKey: ${BITHUMB_API_KEY:apiKey}
       apiSecret: ${BITHUMB_API_SECRET:apiSecret}
       wsUrl: ${BITHUMB_WS_URL:wss:ws}
+      enabled: ${BITHUMB_WS_ENABLED:true}
     korbit:
       apiKey: ${KORBIT_API_KEY:apiKey}
       apiSecret: ${KORBIT_API_SECRET:apiSecret}
       wsUrl: ${KORBIT_WS_URL:wss:ws}
+      enabled: ${KORBIT_WS_ENABLED:false}
+
 
 
