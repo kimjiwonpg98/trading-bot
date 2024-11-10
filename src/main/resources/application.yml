@@ -4,4 +4,18 @@ upbit:
 spring:
   profiles:
     active: local
+  websocket:
+    upbit:
+      api-key: ${UPBIT_API_KEY:apiKey}
+      api-secret: ${UPBIT_API_SECRET:apiSecret}
+      ws-url: ${UPBIT_WS_URL:wss:ws}
+    bithumb:
+      apiKey: ${BITHUMB_API_KEY:apiKey}
+      apiSecret: ${BITHUMB_API_SECRET:apiSecret}
+      wsUrl: ${BITHUMB_WS_URL:wss:ws}
+    korbit:
+      apiKey: ${KORBIT_API_KEY:apiKey}
+      apiSecret: ${KORBIT_API_SECRET:apiSecret}
+      wsUrl: ${KORBIT_WS_URL:wss:ws}
+
 
