@@ -14,7 +14,7 @@ spring:
       apiKey: ${BITHUMB_API_KEY:apiKey}
       apiSecret: ${BITHUMB_API_SECRET:apiSecret}
       wsUrl: ${BITHUMB_WS_URL:wss:ws}
-      enabled: ${BITHUMB_WS_ENABLED:true}
+      enabled: ${BITHUMB_WS_ENABLED:false}
     korbit:
       apiKey: ${KORBIT_API_KEY:apiKey}
       apiSecret: ${KORBIT_API_SECRET:apiSecret}
