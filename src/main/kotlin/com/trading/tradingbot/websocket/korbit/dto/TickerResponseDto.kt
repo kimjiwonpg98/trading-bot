@@ -3,14 +3,6 @@ package com.trading.tradingbot.websocket.korbit.dto
 import java.math.BigDecimal
 
 data class KorbitTickerResponseDto(
-    val type: String,
-    val timestamp: Long,
-    val symbol: String,
-    val snapshot: Boolean,
-    val data: TickerData,
-)
-
-data class TickerData(
     val open: BigDecimal,
     val high: BigDecimal,
     val low: BigDecimal,

@@ -11,7 +11,6 @@ import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketHandler
 import org.springframework.web.socket.WebSocketMessage
 import org.springframework.web.socket.WebSocketSession
-import java.nio.ByteBuffer
 
 @Component
 class KorbitWebSocketHandler(
@@ -33,17 +32,15 @@ class KorbitWebSocketHandler(
         message: WebSocketMessage<*>,
     ) {
         val objectMapper = ObjectMapper()
-        val payload = message.payload as ByteBuffer
-        val byteArray = ByteArray(payload.remaining())
-        payload.get(byteArray)
+        val payload = message.payload as String
 
         // 바이트 배열을 문자열로 변환
-        val jsonString = String(byteArray)
-        val json: JsonNode = objectMapper.readTree(jsonString)
+        val json: JsonNode = objectMapper.readTree(payload)
         val type = json.get("type").asText()
 
         if (type == "ticker") {
-            val result = objectMapper.readValue(jsonString, KorbitTickerResponseDto::class.java)
+            val data = json.get("data").asText()
+            val result = objectMapper.readValue(data, KorbitTickerResponseDto::class.java)
             eventPublisher.publishEvent(KorbitWebSocketTickerEvent(ticketEvent = result))
         }
     }

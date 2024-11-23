@@ -28,7 +28,7 @@ class GridBotService(
 
     @EventListener(KorbitWebSocketTickerEvent::class)
     fun korbit(event: KorbitWebSocketTickerEvent) {
-        val currentPrice = event.ticketEvent.data.close
+        val currentPrice = event.ticketEvent.close
         commonStrategy(currentPrice)
     }
 
