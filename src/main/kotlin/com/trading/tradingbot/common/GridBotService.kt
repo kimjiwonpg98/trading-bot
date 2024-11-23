@@ -1,58 +1,98 @@
 package com.trading.tradingbot.common
 
+import com.trading.tradingbot.utils.CalculatorUtils
+import com.trading.tradingbot.websocket.upbit.event.UpbitWebSocketTickerEvent
+import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 
 @Service
 class GridBotService(
-    private val client: ExchangeService,
+    private val calculatorUtils: CalculatorUtils,
 ) {
-    fun createGridStrategy(config: GridBotConfig): List<GridOrder> {
-        val gridWidth = (config.gridUpperBound - config.gridLowerBound) / config.gridCount
+    private val tradingPair = "BTC-KRW"
+    private val initialInvestment = BigDecimal(1000000)
+    private val gridCount = 5
+    private val gridPercentage = 0.01
+    private val targetValue = BigDecimal(1000000)
+    private var availableFunds = initialInvestment
+    private var lastPrice = BigDecimal.ZERO
+    private var currentHolding = BigDecimal.ZERO
+
+    @EventListener(UpbitWebSocketTickerEvent::class)
+    fun gridStrategy(event: UpbitWebSocketTickerEvent) {
+        val currentPrice = event.ticketEvent.tradePrice
+        if (lastPrice == BigDecimal.ZERO) {
+            lastPrice = currentPrice
+            println("Initial price: $currentPrice")
+            return
+        }
+
+        val currentValue = currentHolding.multiply(currentPrice)
+        val valueDifference = targetValue.subtract(currentValue)
+
+        val priceChange = (currentPrice - lastPrice) / lastPrice
+        val orderAmount =
+            calculatorUtils.calculateOrderAmount(
+                initialInvestment,
+                availableFunds,
+                gridCount,
+                currentPrice,
+            )
+
+        createInfinityGridStrategy(
+            config =
+                InfinityGridBotConfig(
+                    symbol = tradingPair,
+                    initialPrice = BigDecimal(1000000000),
+                    gridLowerBound = BigDecimal(100),
+                    gridCount = 10,
+                    gridPercent = BigDecimal(gridPercentage),
+                ),
+            orderAmount = orderAmount,
+            currentPrice = currentPrice,
+            valueDifference = valueDifference,
+        )
+    }
+
+    fun createInfinityGridStrategy(
+        config: InfinityGridBotConfig,
+        orderAmount: BigDecimal,
+        currentPrice: BigDecimal,
+        valueDifference: BigDecimal,
+    ): List<GridOrder> {
         val gridOrders = mutableListOf<GridOrder>()
 
-        for (i in 0 until config.gridCount.toInt()) {
-            val gridPrice = config.gridLowerBound + (gridWidth * BigDecimal(i))
-            val orderAmount = config.investmentAmount / (config.gridCount * gridPrice)
+        for (i in 0 until config.gridCount) {
+            if (valueDifference > BigDecimal.ZERO) {
+                val buyPrice = calculatorUtils.getBuyPrice(currentPrice, config.gridPercent, i)
+                if (buyPrice >= config.gridLowerBound) {
+                    gridOrders.add(
+                        GridOrder(
+                            type = OrderType.BUY,
+                            price = buyPrice,
+                            amount = orderAmount,
+                        ),
+                    )
+                }
+            }
 
-            gridOrders.add(
-                GridOrder(
-                    type = OrderType.BUY,
-                    price = gridPrice,
-                    amount = orderAmount,
-                ),
-            )
-            gridOrders.add(
-                GridOrder(
-                    type = OrderType.SELL,
-                    price = gridPrice + gridWidth,
-                    amount = orderAmount,
-                ),
-            )
+            if (valueDifference < BigDecimal.ZERO) {
+                val sellPrice = calculatorUtils.getSellPrice(currentPrice, config.gridPercent, i)
+                gridOrders.add(
+                    GridOrder(
+                        type = OrderType.SELL,
+                        price = sellPrice,
+                        amount = orderAmount,
+                    ),
+                )
+            }
         }
 
         return gridOrders
     }
 
-    fun executeGridStrategy(config: GridBotConfig) {
-        val currentPrice = client.getCurrentPrice(config.symbol)
-        val gridOrders = createGridStrategy(config)
-
-        gridOrders.forEach { order ->
-            when (order.type) {
-                OrderType.BUY -> {
-                    if (currentPrice <= order.price) {
-                        val executedOrder = client.createLimitBuyOrder(config.symbol, order.amount, order.price)
-//                        orderRepository.save(executedOrder)
-                    }
-                }
-                OrderType.SELL -> {
-                    if (currentPrice >= order.price) {
-                        val executedOrder = client.createLimitSellOrder(config.symbol, order.amount, order.price)
-//                        orderRepository.save(executedOrder)
-                    }
-                }
-            }
-        }
+    companion object {
+//        const val logger  = KotlinLogging.logger {}
     }
 }
