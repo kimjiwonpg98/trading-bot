@@ -1,7 +1,10 @@
 package com.trading.tradingbot.websocket.upbit.handler
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.trading.tradingbot.websocket.upbit.dto.TickerResponseDto
+import com.trading.tradingbot.websocket.upbit.event.UpbitWebSocketTickerEvent
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
 import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage
@@ -12,12 +15,14 @@ import java.nio.ByteBuffer
 import java.util.UUID
 
 @Component
-class UpbitWebSocketHandler : WebSocketHandler {
+class UpbitWebSocketHandler(
+    private val eventPublisher: ApplicationEventPublisher,
+) : WebSocketHandler {
     private var session: WebSocketSession? = null
 
     override fun afterConnectionEstablished(session: WebSocketSession) {
         val uuid = UUID.randomUUID().toString()
-        session.sendMessage(
+        val tickerSubscribeMessage =
             TextMessage(
                 """
             [
@@ -27,8 +32,7 @@ class UpbitWebSocketHandler : WebSocketHandler {
               {
                 "type": "ticker",
                 "codes": [
-                  "KRW-BTC",
-                  "KRW-ETH"
+                  "KRW-BTC"
                 ]
               },
               {
@@ -36,8 +40,9 @@ class UpbitWebSocketHandler : WebSocketHandler {
               }
             ]
         """,
-            ),
-        )
+            )
+
+        session.sendMessage(tickerSubscribeMessage)
     }
 
     // 메시지를 처리하는 로직
@@ -52,10 +57,13 @@ class UpbitWebSocketHandler : WebSocketHandler {
 
         // 바이트 배열을 문자열로 변환
         val jsonString = String(byteArray)
+        val json: JsonNode = objectMapper.readTree(jsonString)
+        val type = json.get("type").asText()
 
-        val result = objectMapper.readValue(jsonString, TickerResponseDto::class.java)
-
-        println("수신 메시지: $result")
+        if (type == "ticker") {
+            val result = objectMapper.readValue(jsonString, TickerResponseDto::class.java)
+            eventPublisher.publishEvent(UpbitWebSocketTickerEvent(ticketEvent = result))
+        }
     }
 
     // 오류 처리

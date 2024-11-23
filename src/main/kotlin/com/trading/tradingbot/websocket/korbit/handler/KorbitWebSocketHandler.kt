@@ -15,11 +15,11 @@ class KorbitWebSocketHandler : WebSocketHandler {
     private var session: WebSocketSession? = null
 
     override fun afterConnectionEstablished(session: WebSocketSession) {
-        session.sendMessage(
+        val tickerSubscribeMessage =
             TextMessage(
                 "[{\"method\":\"subscribe\",\"type\":\"ticker\",\"symbols\":[\"btc_krw\",\"eth_krw\"]}]",
-            ),
-        )
+            )
+        session.sendMessage(tickerSubscribeMessage)
     }
 
     // 메시지를 처리하는 로직
