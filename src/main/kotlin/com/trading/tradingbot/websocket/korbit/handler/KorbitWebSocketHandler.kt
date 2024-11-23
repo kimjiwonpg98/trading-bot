@@ -1,7 +1,10 @@
 package com.trading.tradingbot.websocket.korbit.handler
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.trading.tradingbot.websocket.upbit.dto.TickerResponseDto
+import com.trading.tradingbot.websocket.korbit.dto.KorbitTickerResponseDto
+import com.trading.tradingbot.websocket.korbit.event.KorbitWebSocketTickerEvent
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
 import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage
@@ -11,7 +14,9 @@ import org.springframework.web.socket.WebSocketSession
 import java.nio.ByteBuffer
 
 @Component
-class KorbitWebSocketHandler : WebSocketHandler {
+class KorbitWebSocketHandler(
+    private val eventPublisher: ApplicationEventPublisher,
+) : WebSocketHandler {
     private var session: WebSocketSession? = null
 
     override fun afterConnectionEstablished(session: WebSocketSession) {
@@ -34,10 +39,13 @@ class KorbitWebSocketHandler : WebSocketHandler {
 
         // 바이트 배열을 문자열로 변환
         val jsonString = String(byteArray)
+        val json: JsonNode = objectMapper.readTree(jsonString)
+        val type = json.get("type").asText()
 
-        val result = objectMapper.readValue(jsonString, TickerResponseDto::class.java)
-
-        println("수신 메시지: $result")
+        if (type == "ticker") {
+            val result = objectMapper.readValue(jsonString, KorbitTickerResponseDto::class.java)
+            eventPublisher.publishEvent(KorbitWebSocketTickerEvent(ticketEvent = result))
+        }
     }
 
     // 오류 처리

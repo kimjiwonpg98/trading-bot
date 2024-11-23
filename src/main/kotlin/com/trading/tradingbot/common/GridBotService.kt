@@ -1,6 +1,7 @@
 package com.trading.tradingbot.common
 
 import com.trading.tradingbot.utils.CalculatorUtils
+import com.trading.tradingbot.websocket.korbit.event.KorbitWebSocketTickerEvent
 import com.trading.tradingbot.websocket.upbit.event.UpbitWebSocketTickerEvent
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
@@ -20,8 +21,18 @@ class GridBotService(
     private var currentHolding = BigDecimal.ZERO
 
     @EventListener(UpbitWebSocketTickerEvent::class)
-    fun gridStrategy(event: UpbitWebSocketTickerEvent) {
+    fun upbitStrategy(event: UpbitWebSocketTickerEvent) {
         val currentPrice = event.ticketEvent.tradePrice
+        commonStrategy(currentPrice)
+    }
+
+    @EventListener(KorbitWebSocketTickerEvent::class)
+    fun korbit(event: KorbitWebSocketTickerEvent) {
+        val currentPrice = event.ticketEvent.data.close
+        commonStrategy(currentPrice)
+    }
+
+    fun commonStrategy(currentPrice: BigDecimal) {
         if (lastPrice == BigDecimal.ZERO) {
             lastPrice = currentPrice
             println("Initial price: $currentPrice")
