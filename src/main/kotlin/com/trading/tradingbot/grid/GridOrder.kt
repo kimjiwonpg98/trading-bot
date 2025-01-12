@@ -1,4 +1,4 @@
-package com.trading.tradingbot.common
+package com.trading.tradingbot.grid
 
 import java.math.BigDecimal
 import java.time.Instant

@@ -1,4 +1,4 @@
-package com.trading.tradingbot.common
+package com.trading.tradingbot.grid
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean

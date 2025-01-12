@@ -1,4 +1,4 @@
-package com.trading.tradingbot.common
+package com.trading.tradingbot.grid
 
 enum class OrderType {
     SELL,

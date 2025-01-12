@@ -21,7 +21,7 @@ class KorbitWebSocketHandler(
     override fun afterConnectionEstablished(session: WebSocketSession) {
         val tickerSubscribeMessage =
             TextMessage(
-                "[{\"method\":\"subscribe\",\"type\":\"ticker\",\"symbols\":[\"btc_krw\",\"eth_krw\"]}]",
+                "[{\"method\":\"subscribe\",\"type\":\"ticker\",\"symbols\":[\"btc_krw\"]}]",
             )
         session.sendMessage(tickerSubscribeMessage)
     }
