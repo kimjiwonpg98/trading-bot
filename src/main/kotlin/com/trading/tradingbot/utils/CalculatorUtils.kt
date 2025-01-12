@@ -10,13 +10,13 @@ class CalculatorUtils {
         currentPrice: BigDecimal,
         gridPercent: BigDecimal,
         margin: Int,
-    ): BigDecimal = currentPrice.subtract(BigDecimal.ONE.subtract(gridPercent * BigDecimal(margin)))
+    ): BigDecimal = convertPriceToTick(currentPrice.subtract(currentPrice.multiply(gridPercent).multiply(BigDecimal(margin))))
 
     fun getSellPrice(
         currentPrice: BigDecimal,
         gridPercent: BigDecimal,
         margin: Int,
-    ): BigDecimal = currentPrice.subtract(BigDecimal.ONE.add(gridPercent * BigDecimal(margin)))
+    ): BigDecimal = convertPriceToTick(currentPrice.add(currentPrice.multiply(gridPercent).multiply(BigDecimal(margin))))
 
     fun getCurrentKrwValueByAmount(
         currencyPrice: BigDecimal,
