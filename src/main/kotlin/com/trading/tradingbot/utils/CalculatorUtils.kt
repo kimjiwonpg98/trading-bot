@@ -25,24 +25,18 @@ class CalculatorUtils {
 
     fun calculateOrderAmount(
         initialInvestment: BigDecimal, // 최초 자금
-        availableFunds: BigDecimal, // 지금 가지고 있는 자금
         gridCount: Int, // 그리드 봇 개수
         price: BigDecimal, // 가격
     ): BigDecimal {
         val gridInvestment = initialInvestment.divide(BigDecimal(gridCount), 8, RoundingMode.HALF_UP)
-        val maxAmount = gridInvestment.divide(price, 8, RoundingMode.HALF_UP)
-        val availableAmount = availableFunds.divide(price, 8, RoundingMode.HALF_UP)
-        return minOf(maxAmount, availableAmount)
+        return gridInvestment.divide(price, 8, RoundingMode.HALF_UP)
     }
 
     fun calculatePercentageChange(
         currentPrice: BigDecimal,
-        currentQuantity: BigDecimal,
         standard: BigDecimal,
     ): BigDecimal {
-        val currentValue = currentPrice.multiply(currentQuantity)
-
-        val difference = currentValue.subtract(standard)
+        val difference = currentPrice.subtract(standard)
         val percentageChange = difference.divide(standard, 10, RoundingMode.HALF_UP).multiply(BigDecimal(100))
         return percentageChange.setScale(2, RoundingMode.HALF_UP)
     }

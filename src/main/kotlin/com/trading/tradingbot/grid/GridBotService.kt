@@ -20,52 +20,44 @@ class GridBotService(
     @Qualifier("bithumbService")
     private val bithumbService: TradingServiceInterface,
 ) {
-    private val tradingPair = "BTC-KRW"
-
-    // 초기 투자할 돈
-    private val initialInvestment = BigDecimal(1000000)
-
-    // 그리드 봇 개수
-    private val gridCount = 2
-
-    // 그리드 퍼센트
-    private val gridPercentage = 0.01
-
-    // 타켓
-    private val targetValue = BigDecimal(1000000)
-
-    // 투자 초기
-    private var availableFunds = initialInvestment
-    private var lastPrice = BigDecimal.ZERO
-    private var currentHolding = BigDecimal.ZERO
-    private val standardPercent = BigDecimal(2)
-
     @EventListener(UpbitWebSocketTickerEvent::class)
     fun upbitStrategy(event: UpbitWebSocketTickerEvent) {
         val currentPrice = event.ticketEvent.tradePrice
-        commonStrategy(currentPrice, BigDecimal.ZERO)
+//        commonStrategy(currentPrice, BigDecimal.ZERO)
     }
 
     @EventListener(KorbitWebSocketTickerEvent::class)
     fun korbit(event: KorbitWebSocketTickerEvent) {
+        val config =
+            InfinityGridBotConfig(
+                symbol = "btc_krw",
+                currency = "btc",
+                initialAmount = BigDecimal(0.0001),
+                gridLowerBound = BigDecimal(100),
+                gridCount = 4,
+                gridPercent = BigDecimal(0.01),
+                initialInvestment = BigDecimal(1000000),
+            )
+
         val currentPrice = event.ticketEvent.close
-        val balances = korbitService.getBalances("btc")
-        val currencyBalance = balances.filter { it.currency == "btc" }
+        val balances = korbitService.getBalances(config.currency)
+        val currencyBalance = balances.filter { it.currency == config.currency }
         val qty = currencyBalance.map { it.available }[0]
+        val avgPrice = currencyBalance.map { it.avgPrice }[0]
         val availableQty = BigDecimal(qty).setScale(7, RoundingMode.DOWN).stripTrailingZeros()
 
         if (availableQty == BigDecimal.ZERO) {
             val params =
                 CreateMakerOrderRequestParams(
-                    targetValue.stripTrailingZeros().toPlainString(),
-                    "btc_krw",
-                    "buy",
+                    config.initialAmount.stripTrailingZeros().toPlainString(),
+                    config.symbol,
+                    OrderType.BUY.name.lowercase(),
                 )
             korbitService.createMakerOrder(params)
         }
 
-        val gridOrder = commonStrategy(currentPrice, BigDecimal(qty))
-        val openOrder = korbitService.getOpenOrder("btc_krw")
+        val gridOrder = commonStrategy(currentPrice, BigDecimal(avgPrice), BigDecimal(qty), config)
+        val openOrder = korbitService.getOpenOrder(config.symbol)
 
         val side =
             gridOrder
@@ -95,46 +87,34 @@ class GridBotService(
 
     fun commonStrategy(
         currentPrice: BigDecimal,
+        avgPrice: BigDecimal,
         qty: BigDecimal,
+        config: InfinityGridBotConfig,
     ): List<GridOrder> {
-        if (lastPrice == BigDecimal.ZERO) {
-            lastPrice = currentPrice
+        if (currentPrice == BigDecimal.ZERO) {
             println("Initial price: $currentPrice")
             return emptyList()
         }
 
-        val currentValue = currentHolding.multiply(currentPrice)
-        val valueDifference = targetValue.subtract(currentValue)
-
         val orderAmount =
             calculatorUtils.calculateOrderAmount(
-                initialInvestment,
-                availableFunds,
-                gridCount,
+                config.initialInvestment,
+                config.gridCount,
                 currentPrice,
             )
 
         val percent =
             calculatorUtils.calculatePercentageChange(
                 currentPrice = currentPrice,
-                currentQuantity = qty,
-                standard = targetValue,
+                standard = avgPrice,
             )
 
         return createInfinityGridStrategy(
-            config =
-                InfinityGridBotConfig(
-                    symbol = tradingPair,
-                    initialPrice = BigDecimal(1000000000),
-                    gridLowerBound = BigDecimal(100),
-                    gridCount = 10,
-                    gridPercent = BigDecimal(gridPercentage),
-                ),
+            config = config,
             orderAmount = orderAmount,
             currentPrice = currentPrice,
-            valueDifference = valueDifference,
             percent = percent,
-            standardPercent = standardPercent,
+            standardPercent = config.gridPercent,
         )
     }
 
@@ -142,7 +122,6 @@ class GridBotService(
         config: InfinityGridBotConfig,
         orderAmount: BigDecimal,
         currentPrice: BigDecimal,
-        valueDifference: BigDecimal,
         percent: BigDecimal,
         standardPercent: BigDecimal,
     ): List<GridOrder> {
