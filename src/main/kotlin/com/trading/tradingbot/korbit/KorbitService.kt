@@ -3,7 +3,7 @@ package com.trading.tradingbot.korbit
 import com.trading.tradingbot.korbit.dto.balances.BalancesResponseDto
 import com.trading.tradingbot.korbit.dto.orders.OpenOrdersResponseDto
 import com.trading.tradingbot.korbit.dto.orders.OrderResponseDto
-import com.trading.tradingbot.trading.TradingServiceInterface
+import com.trading.tradingbot.trading.TradingService
 import com.trading.tradingbot.trading.`in`.CreateLimitOrderRequestParams
 import com.trading.tradingbot.trading.`in`.CreateMakerOrderRequestParams
 import com.trading.tradingbot.trading.out.GetBalancesResponse
@@ -22,7 +22,7 @@ import javax.crypto.spec.SecretKeySpec
 class KorbitService(
     @Value("\${spring.websocket.korbit.apiKey}") private val korbitApiKey: String,
     @Value("\${spring.websocket.korbit.apiSecret}") private val korbitApiSecret: String,
-) : TradingServiceInterface {
+) : TradingService {
     override fun createLimitOrder(body: CreateLimitOrderRequestParams) {
         val webClient =
             WebClient

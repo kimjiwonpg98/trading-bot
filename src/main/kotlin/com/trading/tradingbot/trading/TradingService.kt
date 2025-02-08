@@ -5,7 +5,7 @@ import com.trading.tradingbot.trading.`in`.CreateMakerOrderRequestParams
 import com.trading.tradingbot.trading.out.GetBalancesResponse
 import com.trading.tradingbot.trading.out.GetOpenOrdersResponse
 
-interface TradingServiceInterface {
+interface TradingService {
     fun createLimitOrder(params: CreateLimitOrderRequestParams)
 
     fun createMakerOrder(params: CreateMakerOrderRequestParams)

@@ -9,7 +9,7 @@ spring:
       api-key: ${UPBIT_API_KEY:apiKey}
       api-secret: ${UPBIT_API_SECRET:apiSecret}
       ws-url: ${UPBIT_WS_URL:wss:ws}
-      enabled: ${UPBIT_WS_ENABLED:true}
+      enabled: ${UPBIT_WS_ENABLED:false}
     bithumb:
       apiKey: ${BITHUMB_API_KEY:apiKey}
       apiSecret: ${BITHUMB_API_SECRET:apiSecret}

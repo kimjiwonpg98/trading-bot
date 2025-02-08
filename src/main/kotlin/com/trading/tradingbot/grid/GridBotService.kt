@@ -1,6 +1,7 @@
 package com.trading.tradingbot.grid
 
-import com.trading.tradingbot.trading.TradingServiceInterface
+import com.trading.tradingbot.bithumb.event.BitumbTickerEvent
+import com.trading.tradingbot.trading.TradingService
 import com.trading.tradingbot.trading.`in`.CreateLimitOrderRequestParams
 import com.trading.tradingbot.trading.`in`.CreateMakerOrderRequestParams
 import com.trading.tradingbot.utils.CalculatorUtils
@@ -16,14 +17,19 @@ import java.math.RoundingMode
 class GridBotService(
     private val calculatorUtils: CalculatorUtils,
     @Qualifier("korbitService")
-    private val korbitService: TradingServiceInterface,
+    private val korbitService: TradingService,
     @Qualifier("bithumbService")
-    private val bithumbService: TradingServiceInterface,
+    private val bithumbService: TradingService,
 ) {
     @EventListener(UpbitWebSocketTickerEvent::class)
     fun upbitStrategy(event: UpbitWebSocketTickerEvent) {
         val currentPrice = event.ticketEvent.tradePrice
 //        commonStrategy(currentPrice, BigDecimal.ZERO)
+    }
+
+    @EventListener(BitumbTickerEvent::class)
+    fun bitumb(event: BitumbTickerEvent) {
+        println(event.ticketEvent.close)
     }
 
     @EventListener(KorbitWebSocketTickerEvent::class)

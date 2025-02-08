@@ -2,7 +2,9 @@ package com.trading.tradingbot.bithumb
 
 import com.trading.tradingbot.bithumb.dto.GetBalancesByBithumbDto
 import com.trading.tradingbot.bithumb.dto.GetOpenOrdersByBithumbDto
-import com.trading.tradingbot.trading.TradingServiceInterface
+import com.trading.tradingbot.bithumb.dto.GetTickerByBithumbDto
+import com.trading.tradingbot.bithumb.event.BitumbTickerEvent
+import com.trading.tradingbot.trading.TradingService
 import com.trading.tradingbot.trading.`in`.CreateLimitOrderRequestParams
 import com.trading.tradingbot.trading.`in`.CreateMakerOrderRequestParams
 import com.trading.tradingbot.trading.out.GetBalancesResponse
@@ -12,6 +14,7 @@ import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.security.Keys
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -25,7 +28,8 @@ import javax.crypto.SecretKey
 class BithumbService(
     @Value("\${spring.websocket.bithumb.apiKey}") private val bithumbApiKey: String,
     @Value("\${spring.websocket.bithumb.apiSecret}") private val bithumbApiSecret: String,
-) : TradingServiceInterface {
+    private val eventPublisher: ApplicationEventPublisher,
+) : TradingService {
     override fun createLimitOrder(params: CreateLimitOrderRequestParams) {
         try {
             val body =
@@ -100,6 +104,24 @@ class BithumbService(
                 .bodyToMono(object : ParameterizedTypeReference<List<GetOpenOrdersByBithumbDto>>() {})
                 .block()
                 ?.map { it.toGetOpenOrdersResponse() } ?: emptyList()
+        } catch (e: WebClientResponseException) {
+            throw e
+        }
+    }
+
+    fun getTicker(symbol: String) {
+        try {
+            val ticker =
+                defaultWebClient()
+                    .get()
+                    .uri("/v1/ticker?markets=KRW-${symbol.uppercase()}")
+                    .retrieve()
+                    .bodyToMono(object : ParameterizedTypeReference<List<GetTickerByBithumbDto>>() {})
+                    .block()
+                    ?.map { it.toGetTickerResponse() }
+                    ?.first()!!
+            println(ticker)
+            eventPublisher.publishEvent((BitumbTickerEvent(ticker)))
         } catch (e: WebClientResponseException) {
             throw e
         }
