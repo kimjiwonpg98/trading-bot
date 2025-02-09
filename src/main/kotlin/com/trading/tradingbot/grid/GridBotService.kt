@@ -29,7 +29,61 @@ class GridBotService(
 
     @EventListener(BitumbTickerEvent::class)
     fun bitumb(event: BitumbTickerEvent) {
-        println(event.ticketEvent.close)
+        val config =
+            InfinityGridBotConfig(
+                symbol = "DOGE",
+                currency = "DOGE",
+                initialAmount = BigDecimal(0.0001),
+                gridLowerBound = BigDecimal(100),
+                gridCount = 4,
+                gridPercent = BigDecimal(0.01),
+                initialInvestment = BigDecimal(1000000),
+            )
+
+        val currentPrice = event.ticketEvent.close
+        val balances = bithumbService.getBalances(config.currency)
+        val currencyBalance = balances.filter { it.currency == config.currency }
+        val qty = currencyBalance.map { it.available }[0]
+        val avgPrice = currencyBalance.map { it.avgPrice }[0]
+        val availableQty = BigDecimal(qty).setScale(7, RoundingMode.DOWN).stripTrailingZeros()
+
+        if (availableQty == BigDecimal.ZERO) {
+            val params =
+                CreateMakerOrderRequestParams(
+                    config.initialAmount.stripTrailingZeros().toPlainString(),
+                    config.symbol,
+                    OrderType.BUY.name.lowercase(),
+                )
+            bithumbService.createMakerOrder(params)
+        }
+
+        val gridOrder = commonStrategy(currentPrice, BigDecimal(avgPrice), BigDecimal(qty), config)
+        val openOrder = bithumbService.getOpenOrder(config.symbol)
+
+        val side =
+            gridOrder
+                .getOrNull(0)
+                ?.type
+                .toString()
+                .lowercase()
+
+        val openOrderSize = openOrder.filter { it.side == side }.size
+        val orderSize = maxOf(4 - openOrderSize, 0)
+
+        gridOrder.take(orderSize).map {
+            val params =
+                CreateLimitOrderRequestParams(
+                    it.amount
+                        .setScale(8, RoundingMode.DOWN)
+                        .stripTrailingZeros()
+                        .toPlainString(),
+                    config.symbol,
+                    it.type.name.lowercase(),
+                    it.price.stripTrailingZeros().toPlainString(),
+                )
+
+            bithumbService.createLimitOrder(params)
+        }
     }
 
     @EventListener(KorbitWebSocketTickerEvent::class)
